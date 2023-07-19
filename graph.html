@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Graphviz Network</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.js"></script>
+</head>
+<body>
+  <div id="map-container">
+    <img id="brasil-map" src="https://simplemaps.com/static/svg/br/br.svg" alt="Mapa do Brasil">
+  </div>
+
+  <div id="graph"></div>
+
+  <script>
+    function generateGraph() {
+      const data = [
+        ["AM", "AC"],
+        ["BA", "ES"],
+        ["BA", "ES"],
+        ["BA", "ES"],
+        ["BA", "ES"],
+        ["BA", "MG"],
+        ["BA", "MG"],
+        ["BA", "MG"],
+        ["BA", "MG"],
+        ["BA", "PE"],
+        ["BA", "TO"],
+        ["BA", "TO"],
+        ["GO", "DF"],
+        ["GO", "DF"],
+        ["GO", "DF"],
+        ["MG", "DF"],
+        ["MG", "DF"],
+        ["MG", "ES"],
+        ["MG", "GO"],
+        ["MG", "PE"],
+        ["MG", "RJ"],
+        ["MG", "RJ"],
+        ["MT", "PA"],
+        ["MT", "RO"],
+        ["PA", "AC"],
+        ["PA", "AM"],
+        ["PA", "MT"],
+        ["PA", "RR"],
+        ["PI", "CE"],
+        ["PI", "MA"],
+        ["RJ", "ES"],
+        ["RJ", "SP"],
+        ["RJ", "SP"],
+        ["RJ", "SP"],
+        ["RO", "AM"],
+        ["RS", "PR"],
+        ["SC", "PR"],
+        ["SC", "RS"],
+        ["SC", "RS"],
+        ["SE", "AL"],
+      ];
+
+      // Create a mapping of unique edges by combining elements in alphabetical order
+      const uniqueEdgesMap = {};
+      data.forEach((pair) => {
+        const [from, to] = pair.sort();
+        const edgeId = `${from}-${to}`;
+        uniqueEdgesMap[edgeId] = (uniqueEdgesMap[edgeId] || 0) + 1;
+      });
+
+      const edges = new vis.DataSet();
+      let minEdgeCount = Number.MAX_SAFE_INTEGER;
+      let maxEdgeCount = 0;
+
+      Object.values(uniqueEdgesMap).forEach((count) => {
+        minEdgeCount = Math.min(minEdgeCount, count);
+        maxEdgeCount = Math.max(maxEdgeCount, count);
+      });
+
+      Object.keys(uniqueEdgesMap).forEach((edgeId, index) => {
+        const [from, to] = edgeId.split("-");
+        const count = uniqueEdgesMap[edgeId];
+        const width = 1 + ((count - minEdgeCount) / (maxEdgeCount - minEdgeCount)) * 5; // Calculate edge width based on linear scale
+        edges.add({ id: index, from: from, to: to, width: width, font: { size: 20 } }); // Set font size to 20
+      });
+
+      const nodes = new vis.DataSet();
+      const nodeSet = new Set(data.flat());
+      nodeSet.forEach((label) => {
+        nodes.add({ id: label, label: label });
+      });
+
+      const container = document.getElementById("graph");
+
+      const graphData = {
+        nodes: nodes,
+        edges: edges,
+      };
+
+      // Opções adicionais para melhorar a visualização do gráfico
+      const graphOptions = {
+        layout: {
+          randomSeed: 42, // Número de semente aleatória para manter os nós em suas posições iniciais
+        },
+        physics: {
+          enabled: false, // Desativa a simulação de física para manter os nós soltos
+        },
+        edges: {
+          color: "#848484",
+          smooth: {
+            enabled: false, // Desativa as curvas suaves nas arestas
+          },
+        },
+      };
+
+      const network = new vis.Network(container, graphData, graphOptions);
+    }
+
+    generateGraph();
+  </script>
+
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative; /* Adicionamos o position relative para permitir posicionar o #map-container */
+    }
+
+    #map-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute; /* Posição absoluta para sobrepor o mapa sobre o gráfico */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* Impedir que o mapa bloqueie a interação com o gráfico */
+    }
+
+    #brasil-map {
+      width: auto;
+      height: 100vh;
+      opacity: 0.5; /* Ajuste a opacidade conforme necessário para não sobrecarregar o gráfico */
+    }
+
+    #graph {
+      width: auto;
+      height: 100vh;
+    }
+  </style>
+</body>
+</html>
